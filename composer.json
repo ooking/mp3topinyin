@@ -1,0 +1,6 @@
+{
+    "require": {
+        "duncan3dc/meta-audio": "^0.5.0",
+        "aweitian/pinyin": "^1.0"
+    }
+}
