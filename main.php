@@ -17,7 +17,8 @@ $tagger = new \duncan3dc\MetaAudio\Tagger;
 $tagger->addDefaultModules();
 
 // 处理的目录
-$path = '/Volumes/EXDATA/mp3/eason';
+// @todo 通过命令行输入目录
+$path = '请输入目录';
 
 $totalFiles = 0;
 
@@ -33,42 +34,63 @@ foreach($fileObjs as $object){
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime = finfo_file($finfo, $object->getPathname());
 
+    $filePath = $object->getPathInfo()->getPathname();
+    $fileName = $object->getFilename();
+
     // 只处理mp3文件
     if(!strstr($mime, "audio/mpeg")) {
+        echo $filePath . "\n";
         echo "It's not a mp3 file:" . $mime . "\n";
         continue;
     }
 
-    $filePath = $object->getPathInfo()->getPathname();
-    $fileName = $object->getFilename();
-    // echo $filePath . "\n";
-
     $mp3 = $tagger->open($fileFullPath);
-    // 简体转拼音
-    $artistPinyin = Aw\PinYin::convert($mp3->getArtist());
-    // 用于作为文件名前缀
-    $artistPinyins = Aw\PinYin::convert($mp3->getArtist(), 'first', '');
-    $albumPinyin = Aw\PinYin::convert($mp3->getAlbum());
-    $titlePinyin = Aw\PinYin::convert($mp3->getTitle());
 
-    $artistPinyins = 'eason';
-    $artistPinyin = $artistPinyins;
+    $artist = $mp3->getArtist();
+    $album = $mp3->getAlbum();
+    $title = $mp3->getTitle();
+    $artistFirst = $artist;
 
-    $newFileName = $artistPinyins . '-' . str_replace(' ', '', $titlePinyin) . '.mp3';
+    $changeFlag = false;
 
-    echo "Artist: {$mp3->getArtist()} >> {$artistPinyin} >> {$artistPinyins}\n";
-    echo "Album: {$mp3->getAlbum()} >> {$albumPinyin}\n";
-    echo "Title: {$mp3->getTitle()} >> {$titlePinyin}\n";
+    if(preg_match('/[\x{4e00}-\x{9fa5}]/u', $artist) > 0) {
+        // 简体转拼音
+        $artist = Aw\PinYin::convert($artist);
+        // 用于作为文件名前缀
+        $artistFirst = Aw\PinYin::convert($mp3->getArtist(), 'first', '');
+        $changeFlag = true;
+    }
+    
+    if(preg_match('/[\x{4e00}-\x{9fa5}]/u', $album) > 0) {
+        $album = Aw\PinYin::convert($album);
+        $changeFlag = true;
+    }
 
-    $mp3->setAlbum($albumPinyin);
-    $mp3->setTitle($titlePinyin);
-    // $mp3->setArtist($artistPinyin);
-    $mp3->setArtist('eason');
+    
+    if(preg_match('/[\x{4e00}-\x{9fa5}]/u', $title) > 0) {
+        $title = Aw\PinYin::convert($title);
+        $changeFlag = true;
+    }
+
+    if(!$changeFlag) continue;
+
+    $newFileName = $artistFirst . '-' . str_replace(' ', '', $title) . '.mp3';
+
+    echo "Artist: {$mp3->getArtist()} >> {$artist} >> {$artistFirst}\n";
+    echo "Album: {$mp3->getAlbum()} >> {$album}\n";
+    echo "Title: {$mp3->getTitle()} >> {$title}\n";
+    
+    $mp3->setAlbum($album);
+    $mp3->setTitle($title);
+    $mp3->setArtist($artist);
     $mp3->save();
 
     echo "{$fileName} >> {$newFileName}\n";
     echo $filePath . '/' . $fileName . "\n";
     echo $filePath . '/' . $newFileName . "\n";
+    
+    echo "------------------------------\n";
+
     rename($filePath . '/' . $fileName, $filePath . '/' . $newFileName);
 
 }
@@ -78,4 +100,3 @@ function recursiveDirectoryIterator($path) {
         yield $file;
     }
 }
-
