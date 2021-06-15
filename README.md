@@ -2,6 +2,7 @@
 把mp3的tag中文信息转换成拼音以适应某些不支持中文的设备
 
 运行结果示例：
+```
 Artist: 庾澄庆 >> yu cheng qing >> ycq
 Album: 戒不掉 >> jie bu diao
 Title: 对峙 >> dui zhi
@@ -41,3 +42,4 @@ Artist: 陈奕迅 >> chen yi xun >> cyx
 Album: rice & shine >> rice & shine
 Title: 娱乐天空 >> yu le tian kong
 陈奕迅-娱乐天空.mp3 >> cyx-yuletiankong.mp3
+```
